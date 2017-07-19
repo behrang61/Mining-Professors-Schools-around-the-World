@@ -1,0 +1,642 @@
+##Original author: Ebrahim Tarshizi & Ryan Livernois 
+##Heavily edited and updated by Robert Setterlind
+
+library(plyr)
+library(mgraph)
+library(qcc)
+dat <- read.csv("Diversity in ME_with position categories.csv", header = F, skip = 1)
+colnames(dat) <- c("Affiliation","Country", "City", "Continent","lat..N","long..","Name", "Gender", "Expertise_1", "Expertise_2", "SOMP_Member", "Position", "Position_Category")
+dat<-dat[1:nrow(dat),]
+
+par(mfrow=c(1,1))
+piemap(dat,attribute="Continent", label="Continental Distribution of Mining Engineering Faculty") ## text size to make more readable
+
+Na <- dat[which(dat$Continent=="N. America"),]
+NaMale <- dat[which(dat$Continent=="N. America" & dat$Gender=="M"),]
+NaFemale <- dat[which(dat$Continent=="N. America" & dat$Gender=="F"),]
+Sa <- dat[which(dat$Continent=="S. America"),]
+SaMale <- dat[which(dat$Continent=="S. America" & dat$Gender=="M"),]
+SaFemale <- dat[which(dat$Continent=="S. America" & dat$Gender=="F"),]
+As <- dat[which(dat$Continent=="Asia"),]
+AsMale <- dat[which(dat$Continent=="Asia" & dat$Gender=="M"),]
+AsFemale <- dat[which(dat$Continent=="Asia" & dat$Gender=="F"),]
+E <- dat[which(dat$Continent=="Europe"),]
+EMale <- dat[which(dat$Continent=="Europe" & dat$Gender=="M"),]
+EFemale <- dat[which(dat$Continent=="Europe" & dat$Gender=="F"),]
+Au <-dat[which(dat$Continent=="Australia"),]
+AuMale <- dat[which(dat$Continent=="Australia" & dat$Gender=="M"),]
+AuFemale <- dat[which(dat$Continent=="Australia" & dat$Gender=="F"),]
+Af <-dat[which(dat$Continent=="Africa"),]
+AfMale <- dat[which(dat$Continent=="Africa" & dat$Gender=="M"),]
+AfFemale <- dat[which(dat$Continent=="Africa" & dat$Gender=="F"),]
+
+### Continental Distribution ###
+
+cont.slices <- c(nrow(NaMale),nrow(NaFemale),nrow(SaMale),nrow(SaFemale),nrow(AsMale),nrow(AsFemale),
+                 nrow(EMale),nrow(EFemale),nrow(AuMale),nrow(AuFemale),nrow(AfMale),nrow(AfFemale))
+cont.leg.lbls <- c("N. America Total","N. America Female","S. America Total","S. America Female",
+               "Asia Total","Asia Female","Europe Total","Europe Female","Australia Total","Australia Female",
+               "Africa Total","Africa Female")
+cont.pct.array <- c(nrow(Na),nrow(NaFemale),nrow(Sa),nrow(SaFemale),nrow(As),nrow(AsFemale),
+                    nrow(E),nrow(EFemale),nrow(Au),nrow(AuFemale),nrow(Af),nrow(AfFemale))
+cont.pct <- round(cont.pct.array/sum(cont.slices)*100)
+cont.lbls <- cont.pct
+cont.lbls <- paste(cont.lbls,"%",sep="")
+cont.cols <- c("cadetblue3","cadetblue2","chocolate3","chocolate1","brown","brown1","azure3","azure2",
+               "gold3","gold2","darkseagreen3","darkseagreen2")
+pie(cont.slices,labels=cont.lbls,col=cont.cols,main="Continental Distribution of Mining Engineering Faculty", cex=1)
+legend("topleft", cont.leg.lbls, cex = 1, fill=cont.cols)
+
+################## Expertise
+
+#############Globally
+Expertise1 <- data.frame(dat$Expertise_1)
+Expertise2 <- data.frame(dat$Expertise_2)
+names(Expertise2) <- names(Expertise1)
+ExpertiseG <- rbind(Expertise1,Expertise2)
+WEx <- count(ExpertiseG)$freq
+names(WEx) <- count(ExpertiseG)$dat.Expertise_1
+x <- names(WEx)
+names(WEx) <- replace(x, is.na(x), "N/A")
+Wcols <- c("red", "maroon","orangered4","orange","yellow","green","seagreen","aquamarine","cyan4","steelblue3","blue","navy","violet","violetred","purple","saddlebrown","salmon","white","gray","black","yellow2","blue2","white")
+percentlabels <- round(100*WEx/sum(WEx),1)
+pielabels <- paste(percentlabels,"%", sep="")
+pie(WEx, main = "Faculty Expertise Globally", col=Wcols, labels = pielabels, radius=.8, cex=0.6)
+legend("topleft", c(levels(dat$Expertise_1),"N/A"), cex = 0.5, fill=Wcols)
+##Pareto Chart
+pareto.chart(WEx, main = "Faculty Expertise Globally", col = Wcols)
+
+#####NORTH AMERICA
+Expertise1.N <- data.frame(Na$Expertise_1)
+Expertise2.N <- data.frame(Na$Expertise_2)
+names(Expertise2.N) <- names(Expertise1.N)
+ExpertiseN <- rbind(Expertise1.N,Expertise2.N)
+NaEx <- count(ExpertiseN)$freq
+names(NaEx) <- count(ExpertiseN)$Na.Expertise_1
+x <- names(NaEx)
+names(NaEx) <- replace(x, is.na(x), "N/A")
+cols <- c("red", "maroon","orange","yellow","green","seagreen","aquamarine","steelblue3","blue","navy","violet","violetred","purple","saddlebrown","salmon","white","gray")
+percentlabels <- round(100*NaEx/sum(NaEx),1)
+pielabels <- paste(percentlabels,"%", sep="")
+pie(NaEx, main = "Faculty Expertise in North America", col=cols, labels = pielabels, radius=1, cex=0.6)
+legend("topleft", c("Automation", "Environment", "Excavation", "Exploration", "Health & Saftey", "Other", "Machinery", "Mine Design", "Management", "Mineral Economics", "Mineral Processing", "Natural Gas", "Legal", "Rock Mechanics", "Surveying", "Sustainability", "Ventilation"), cex = 0.6, fill=cols)
+##Pareto Chart
+pareto.chart(NaEx, main="Faculty Expertise in North America", col=cols)
+
+#####SouthAMERICA
+Expertise1.S <- data.frame(Sa$Expertise_1)
+Expertise2.S <- data.frame(Sa$Expertise_2)
+names(Expertise2.S) <- names(Expertise1.S)
+Expertise.S <- rbind(Expertise1.S,Expertise2.S)
+SaEx <- count(Expertise.S)$freq
+names(SaEx) <- count(Expertise.S)$Sa.Expertise_1
+x <- names(SaEx)
+names(SaEx) <- replace(x, is.na(x), "N/A")
+Sacols <- c("red", "maroon","orange","yellow","green","seagreen","aquamarine","steelblue3","blue","navy","violet","violetred")
+percentlabels <- round(100*SaEx/sum(SaEx),1)
+pielabels <- paste(percentlabels,"%", sep="")
+pie(SaEx, main = "Faculty Expertise in South America", col=Sacols, labels = pielabels, radius=1, cex=0.6)
+legend("topleft", c("Environment", "Excavation", "Exploration", "Health & Saftey", "Legal", "Management", "Mine Design", "Mineral Economics", "Mineral Processing", "Other", "Rock Mechanics", "Sustainability"), cex = 0.7, fill=Sacols)
+##Pareto Chart
+pareto.chart(SaEx, main="Faculty Expertise in South America", col=Sacols)
+
+#####EUrope
+Expertise1.E <- data.frame(E$Expertise_1)
+Expertise2.E <- data.frame(E$Expertise_2)
+names(Expertise2.E) <- names(Expertise1.E)
+Expertise.E <- rbind(Expertise1.E,Expertise2.E)
+EEx <- count(Expertise.E)$freq
+names(EEx) <- count(Expertise.E)$E.Expertise_1
+x <- names(EEx)
+names(EEx) <- replace(x, is.na(x), "N/A")
+Ecols <- c("red", "maroon","orange","yellow","green","seagreen","aquamarine","steelblue3","blue","navy","violet","violetred","purple","saddlebrown","salmon","white","gray")
+percentlabels <- round(100*EEx/sum(EEx),1)
+pielabels <- paste(percentlabels,"%", sep="")
+pie(EEx, main = "Faculty Expertise in Europe", col=Ecols, labels = pielabels, radius =1, cex=0.6)
+legend("topleft", c("Automation", "Environment", "Excavation", "Exploration", "Health & Saftey", "Legal", "Machinery", "Management", "Mine Design", "Mineral Economics", "Mineral Processing", "Natural Gas", "Other", "Rock Mechanics", "Surveying", "Sustainability", "Ventilation"), cex = 0.7, fill=Ecols)
+##Pareto Chart
+pareto.chart(EEx, main="Faculty Expertise in Europe", col=Ecols)
+
+#####AFRICA
+Expertise1.Af <- data.frame(Af$Expertise_1)
+Expertise2.Af <- data.frame(Af$Expertise_2)
+names(Expertise2.Af) <- names(Expertise1.Af)
+Expertise.Af <- rbind(Expertise1.Af,Expertise2.Af)
+AfEx <- count(Expertise.Af)$freq
+names(AfEx) <- count(Expertise.Af)$Af.Expertise_1
+x <- names(AfEx)
+names(AfEx) <- replace(x, is.na(x), "N/A")
+Afcols <- c("red", "maroon","orange","yellow","green","seagreen","aquamarine","steelblue3","blue","navy","violet","violetred","purple","saddlebrown","salmon","white","gray")
+percentlabels <- round(100*AfEx/sum(AfEx),1)
+pielabels <- paste(percentlabels,"%", sep="")
+pie(AfEx, main = "Faculty Expertise in Africa", col=Afcols, labels = pielabels, radius=1, cex=0.6)
+legend("topleft", c("Automation", "Environment", "Excavation", "Exploration", "Health & Saftey", "Machinery", "Management", "Mine Design", "Mineral Economics", "Mineral Processing", "Natural Gas", "Other", "Rock Mechanics", "Social","Surveying", "Sustainability", "Ventilation"), cex = 0.7, fill=Afcols)
+##Pareto Chart
+pareto.chart(AfEx, main="Faculty Expertise in Africa", col=Afcols)
+
+#####Asia
+Expertise1.As <- data.frame(As$Expertise_1)
+Expertise2.As <- data.frame(As$Expertise_2)
+names(Expertise2.As) <- names(Expertise1.As)
+Expertise.As <- rbind(Expertise1.As,Expertise2.As)
+AsEx <- count(Expertise.As)$freq
+names(AsEx) <- count(Expertise.As)$As.Expertise_1
+x <- names(AsEx)
+names(AsEx) <- replace(x, is.na(x), "N/A")
+Ascols <- c("red", "maroon","orange","yellow","green","seagreen","aquamarine","steelblue3","blue","navy","violet","violetred","purple","saddlebrown","salmon")
+percentlabels <- round(100*AsEx/sum(AsEx),1)
+pielabels <- paste(percentlabels,"%", sep="")
+pie(AsEx, main = "Faculty Expertise in Asia", col=Ascols, labels = pielabels, radius=1, cex=0.6)
+legend("topleft",c("Automation", "Environment", "Excavation", "Exploration", "Health & Saftey","Mine Design", "Mineral Processing", "Natural Gas", "Other", "Reclemation", "Rock Mechanics", "Social","Surveying", "Sustainability", "Ventilation"), cex = 0.7, fill=Ascols)
+##Pareto Chart
+pareto.chart(AsEx, main="Faculty Expertise in Asia", col=Ascols)
+
+#####AUSTRALIA
+Expertise1.Au <- data.frame(Au$Expertise_1)
+Expertise2.Au <- data.frame(Au$Expertise_2)
+names(Expertise2.Au) <- names(Expertise1.Au)
+Expertise.Au <- rbind(Expertise1.Au,Expertise2.Au)
+AuEx <- count(Expertise.Au)$freq
+names(AuEx) <- count(Expertise.Au)$Au.Expertise_1
+x <- names(AuEx)
+names(AuEx) <- replace(x, is.na(x), "N/A")
+Aucols <- c("red", "maroon","orange","yellow","green","seagreen","aquamarine","steelblue3","blue","navy","violet")
+percentlabels <- round(100*AuEx/sum(AuEx),1)
+pielabels <- paste(percentlabels,"%", sep="")
+pie(AuEx, main = "Faculty Expertise in Australia", col=Aucols, labels = pielabels, radius=1, cex=0.6)
+legend("topleft",c("Environment", "Exploration", "Health & Saftey","Legal", "Management", "Mine Design", "Mineral Economics","Mineral Processing", "Other", "Rock Mechanics", "Sustainability"), cex = 0.7, fill=Aucols)
+##Pareto Chart
+pareto.chart(AuEx, main="Faculty Expertise in Australia", col=Aucols)
+
+####
+
+
+#########
+piemap(dat,attribute = "Continent", label="Distribution of Faculty by Contient (2016)")
+piemap(dat,attribute = "Gender", label= "Distribution of Faculty by Gender (2016)")    # changed csv file to make all M's and F's matchboc()
+
+###########################################
+###### GENDER ###############
+
+##following code for the pie charts of gender
+# diversity of gender base
+
+
+####################### Global##
+Wg <- count(dat$Gender)$freq
+Wfgcols <- c("red", "blue")
+percentlabels <- round(100*Wg/sum(Wg),1)
+Wpielabels <- paste(percentlabels,"%", sep="")
+pie(Wg, main = "Gender Distribution Globally" ,col=Wfgcols, labels = Wpielabels, radius=1, cex=1.25)
+legend("topleft", c("Female", "Male"), cex = 1.25, fill=Wfgcols)
+
+par(mfrow=c(2,3))
+###################AFRICA GENDER
+Afg <- count(Af$Gender)$freq
+Afgcols <- c("red", "blue")
+percentlabels <- round(100*Afg/sum(Afg),1)
+Afpielabels <- paste(percentlabels,"%", sep="")
+pie(Afg, main = "Africa" ,col=Afgcols, labels = Afpielabels, radius=1, cex=1.25)
+legend("topleft", c("Female", "Male"), cex = 1.25, fill=Afgcols)
+
+################ASIA
+Asg <- count(As$Gender)$freq
+Asgcols <- c("red", "blue")
+percentlabels <- round(100*Asg/sum(Asg),1)
+Aspielabels <- paste(percentlabels,"%", sep="")
+pie(Asg, main = "Asia" ,col=Asgcols, labels = Aspielabels, radius=1, cex=1.25)
+legend("topleft", c("Female", "Male"), cex = 1.25, fill=Asgcols)
+
+###############AUSTRALIA
+Aug <- count(Au$Gender)$freq
+Augcols <- c("red", "blue")
+percentlabels <- round(100*Aug/sum(Aug),1)
+Aupielabels <- paste(percentlabels,"%", sep="")
+pie(Aug, main = "Australia" ,col=Augcols, labels = Aupielabels, radius=1, cex=1.25)
+legend("topleft", c("Female", "Male"), cex = 1.25, fill=Augcols)
+
+################EUROPE
+Eg <- count(E$Gender)$freq
+Ecols <- c("red", "blue")
+percentlabels <- round(100*Eg/sum(Eg),1)
+Egpielabels <- paste(percentlabels,"%", sep="")
+pie(Eg, main = "Europe" ,col=Ecols, labels = Egpielabels, radius=1, cex=1.25)
+legend("topleft", c("Female", "Male"), cex = 1.25, fill=Ecols)
+
+##########N.America
+Ng <- count(Na$Gender)$freq
+Ncols <- c("red", "blue")
+percentlabels <- round(100*Ng/sum(Ng),1)
+Ngpielabels <- paste(percentlabels,"%", sep="")
+pie(Ng, main = "North America" ,col=Ncols, labels = Ngpielabels, radius=1, cex=1.25)
+legend("topleft", c("Female", "Male"), cex = 1.25, fill=Ncols)
+
+##########SOUTH AMERICA
+Sg <- count(Sa$Gender)$freq
+Scols <- c("red", "blue")
+percentlabels <- round(100*Sg/sum(Sg),1)
+Sgpielabels <- paste(percentlabels,"%", sep="")
+pie(Sg, main = "South America" ,col=Scols, labels = Sgpielabels, radius=1, cex=1.25)
+legend("topleft", c("Female", "Male"), cex = 1.25, fill=Scols)
+
+
+########################### MEMBER DISTRIBUTION#############################
+
+Wm <- count(dat$SOMP_Member)$freq
+Wmcols <- c("blue", "green")
+percentlabels <- round(100*Wm/sum(Wm),1)
+Wmpielabels <- paste(percentlabels,"%", sep="")
+pie(Wm, main = "Member Distribution Globally" ,col=Wmcols, labels = Wmpielabels, radius=1, cex=1)
+legend("topleft", c("Non-Member", "Member"), cex = 1, fill=Wmcols)
+
+
+#######AFRICA
+Afm <- count(Af$SOMP_Member)$freq
+Afmcols <- c("blue", "green")
+percentlabels <- round(100*Afm/sum(Afm),1)
+Afmpielabels <- paste(percentlabels,"%", sep="")
+pie(Afm, main = "Member Distribution in Africa" ,col=Afmcols, labels = Afmpielabels, radius=1, cex=1)
+legend("topleft", c("Non-Member", "Member"), cex = 1, fill=Afmcols)
+
+########Asia
+Asm <- count(As$SOMP_Member)$freq
+Asmcols <- c("blue", "green")
+percentlabels <- round(100*Asm/sum(Asm),1)
+Asmpielabels <- paste(percentlabels,"%", sep="")
+pie(Asm, main = "Member Distribution in Asia" ,col=Asmcols, labels = Asmpielabels, radius=1, cex=1)
+legend("topleft", c("Non-Member", "Member"), cex = 1, fill=Asmcols)
+
+
+########Australia
+Aum <- count(Au$SOMP_Member)$freq
+Aumcols <- c("blue", "green")
+percentlabels <- round(100*Aum/sum(Aum),1)
+Aumpielabels <- paste(percentlabels,"%", sep="")
+pie(Aum, main = "Member Distribution in Australia" ,col=Aumcols, labels = Aumpielabels, radius=1, cex=1)
+legend("topleft", c("Non-Member", "Member"), cex = 1, fill=Aumcols)
+
+###########N.America
+Nm <- count(Na$SOMP_Member)$freq
+Nmcols <- c("blue", "green")
+percentlabels <- round(100*Nm/sum(Nm),1)
+Nmpielabels <- paste(percentlabels,"%", sep="")
+pie(Nm, main = "Member Distribution in North America" ,col=Nmcols, labels = Nmpielabels, radius=1, cex=1)
+legend("topleft", c("Non-Member", "Member"), cex = 1, fill=Nmcols)
+
+###### S. America
+Sm <- count(Sa$SOMP_Member)$freq
+Smcols <- c("blue", "green")
+percentlabels <- round(100*Sm/sum(Sm),1)
+Smpielabels <- paste(percentlabels,"%", sep="")
+pie(Sm, main = "Member Distribution in South America" ,col=Smcols, labels = Smpielabels, radius=1, cex=1)
+legend("topleft", c("Non-Member", "Member"), cex = 1, fill=Smcols)
+
+########Position Distributions#########
+
+####Global
+Pos.G <- count(dat$Position_Category)$freq
+Pos.Cols <- c("red", "maroon","orangered4","orange","yellow","green","seagreen","aquamarine","cyan4","steelblue3")
+names(Pos.G) <- count(dat$Position_Category)$x
+x <- names(Pos.G)
+names(Pos.G) <- replace(x, is.na(x), "N/A")
+pareto.chart(Pos.G, main="Global Position Distribution", col=Pos.Cols)
+## Stacked w/ NA at end
+GPos.T <- table(dat$Gender, dat$Position_Category)
+GPos.T <- GPos.T[,order(colSums(GPos.T), decreasing=T)]
+GPos.T.NA <- table(dat$Gender,dat$Position_Category, useNA="ifany")
+GPos.T.NA <- GPos.T.NA[,10]
+GPos.T.NA <- t(GPos.T.NA)
+GPos.T.NA <- t(GPos.T.NA)       ##yes, repeat this line
+colnames(GPos.T.NA) <- "N/A"
+GPos.T.C <- cbind(GPos.T,GPos.T.NA)
+Pos.S.Cols <- c(rep(c("cadetblue1","cadetblue"),1),rep(c("coral","coral3"),2),rep(c("brown1","brown"),2),
+                rep(c("darkgoldenrod1","darkgoldenrod"),2),rep(c("darkorange","darkorange3"),2),
+                rep(c("firebrick2","firebrick"),2),rep(c("darkseagreen1","darkseagreen"),2),
+                rep(c("deeppink2","deeppink4"),2),rep(c("khaki1","khaki3"),2),rep(c("lightblue1","lightblue3"),2))
+barplot(GPos.T.C, col=Pos.S.Cols, ylim=c(0,250), main="Position Distribution of Mining Faculty Worldwide",
+        xlab="Position", ylab="Quantity",legend.text=c("Female","Male"))
+
+##
+par(mfrow=c(2,3))
+####N. America
+Pos.Na <- count(Na$Position_Category)$freq
+names(Pos.Na) <- count(Na$Position_Category)$x
+x <- names(Pos.Na)
+names(Pos.Na) <- replace(x, is.na(x), "NA")
+pareto.chart(Pos.Na, main="North America Position Distribution", col=Pos.Cols)
+## Stacked w/ NA at end
+NaPos.T <- table(Na$Gender, Na$Position_Category)
+NaPos.T <- NaPos.T[,order(colSums(NaPos.T), decreasing=T)]
+NaPos.T.NA <- table(Na$Gender,Na$Position_Category, useNA="ifany")
+NaPos.T.NA <- NaPos.T.NA[,10]
+NaPos.T.NA <- t(NaPos.T.NA)
+NaPos.T.NA <- t(NaPos.T.NA)       ##yes, repeat this line
+colnames(NaPos.T.NA) <- "N/A"
+NaPos.T.C <- cbind(NaPos.T,NaPos.T.NA)
+barplot(NaPos.T.C, col=Pos.S.Cols, ylim=c(0,60), main="North America", xlab="Position", ylab="Quantity",
+        legend.text=c("Female","Male"), cex.names=0.8)
+#legend("topright",c("Female","Male"),cex=1,fill=Pos.S.Cols)
+
+####S. America
+Pos.Sa <- count(Sa$Position_Category)$freq
+names(Pos.Sa) <- count(Sa$Position_Category)$x
+x <- names(Pos.Sa)
+names(Pos.Sa) <- replace(x, is.na(x), "N/A")
+pareto.chart(Pos.Sa, main="South America Position Distribution", col=Pos.Cols)
+## Stacked w/ NA at end
+SaPos.T <- table(Sa$Gender, Sa$Position_Category)
+SaPos.T <- SaPos.T[,order(colSums(SaPos.T), decreasing=T)]
+SaPos.T.NA <- table(Sa$Gender,Sa$Position_Category, useNA="ifany")
+SaPos.T.NA <- SaPos.T.NA[,10]
+SaPos.T.NA <- t(SaPos.T.NA)
+SaPos.T.NA <- t(SaPos.T.NA)       ##yes, repeat this line
+colnames(SaPos.T.NA) <- "N/A"
+SaPos.T.C <- cbind(SaPos.T,SaPos.T.NA)
+barplot(SaPos.T.C, col=Pos.S.Cols, ylim=c(0,20), main="South America", xlab="Position", ylab="Quantity",
+        legend.text=c("Female","Male"), cex.names=0.8)
+
+####Europe
+Pos.E <- count(E$Position_Category)$freq
+names(Pos.E) <- count(E$Position_Category)$x
+x <- names(Pos.E)
+names(Pos.E) <- replace(x, is.na(x), "N/A")
+pareto.chart(Pos.E, main="Europe Position Distribution", col=Pos.Cols)
+## Stacked w/ NA at end
+EPos.T <- table(E$Gender, E$Position_Category)
+EPos.T <- EPos.T[,order(colSums(EPos.T), decreasing=T)]
+EPos.T.NA <- table(E$Gender,E$Position_Category, useNA="ifany")
+EPos.T.NA <- EPos.T.NA[,10]
+EPos.T.NA <- t(EPos.T.NA)
+EPos.T.NA <- t(EPos.T.NA)       ##yes, repeat this line
+colnames(EPos.T.NA) <- "N/A"
+EPos.T.C <- cbind(EPos.T,EPos.T.NA)
+barplot(EPos.T.C, col=Pos.S.Cols, ylim=c(0,100), main="Europe", xlab="Position", ylab="Quantity",
+        legend.text=c("Female","Male"), cex.names=0.8)
+
+####Africa
+Pos.Af <- count(Af$Position_Category)$freq
+names(Pos.Af) <- count(Af$Position_Category)$x
+x <- names(Pos.Af)
+names(Pos.Af) <- replace(x, is.na(x), "N/A")
+pareto.chart(Pos.Af, main="Africa Position Distribution", col=Pos.Cols)
+## Stacked w/ NA at end
+AfPos.T <- table(Af$Gender, Af$Position_Category)
+AfPos.T <- AfPos.T[,order(colSums(AfPos.T), decreasing=T)]
+AfPos.T.NA <- table(Af$Gender,Af$Position_Category, useNA="ifany")
+AfPos.T.NA <- AfPos.T.NA[,10]
+AfPos.T.NA <- t(AfPos.T.NA)
+AfPos.T.NA <- t(AfPos.T.NA)       ##yes, repeat this line
+colnames(AfPos.T.NA) <- "N/A"
+AfPos.T.C <- cbind(AfPos.T,AfPos.T.NA)
+barplot(AfPos.T.C, col=Pos.S.Cols, ylim=c(0,25), main="Africa", xlab="Position", ylab="Quantity",
+        legend.text=c("Female","Male"), cex.names=0.8)
+
+####Asia
+Pos.As <- count(As$Position_Category)$freq
+names(Pos.As) <- count(As$Position_Category)$x
+x <- names(Pos.As)
+names(Pos.As) <- replace(x, is.na(x), "N/A")
+pareto.chart(Pos.As, main="Asia Position Distribution", col=Pos.Cols)
+## Stacked w/ NA at end
+AsPos.T <- table(As$Gender, As$Position_Category)
+AsPos.T <- AsPos.T[,order(colSums(AsPos.T), decreasing=T)]
+AsPos.T.NA <- table(As$Gender,As$Position_Category, useNA="ifany")
+AsPos.T.NA <- AsPos.T.NA[,10]
+AsPos.T.NA <- t(AsPos.T.NA)
+AsPos.T.NA <- t(AsPos.T.NA)       ##yes, repeat this line
+colnames(AsPos.T.NA) <- "N/A"
+AsPos.T.C <- cbind(AsPos.T,AsPos.T.NA)
+barplot(AsPos.T.C, col=Pos.S.Cols, ylim=c(0,70), main="Asia", xlab="Position", ylab="Quantity",
+        legend.text=c("Female","Male"), cex.names=0.8)
+
+####Australia
+Pos.Au <- count(Au$Position_Category)$freq
+names(Pos.Au) <- count(Au$Position_Category)$x
+x <- names(Pos.Au)
+names(Pos.Au) <- replace(x, is.na(x), "N/A")
+pareto.chart(Pos.Au, main="Australia Position Distribution", col=Pos.Cols)
+## Stacked w/ NA at end
+AuPos.T <- table(Au$Gender, Au$Position_Category)
+AuPos.T <- AuPos.T[,order(colSums(AuPos.T), decreasing=T)]
+AuPos.T.NA <- table(Au$Gender,Au$Position_Category, useNA="ifany")
+AuPos.T.NA <- AuPos.T.NA[,10]
+AuPos.T.NA <- t(AuPos.T.NA)
+AuPos.T.NA <- t(AuPos.T.NA)       ##yes, repeat this line
+colnames(AuPos.T.NA) <- "N/A"
+AuPos.T.C <- cbind(AuPos.T,AuPos.T.NA)
+barplot(AuPos.T.C, col=Pos.S.Cols, ylim=c(0,25), main="Australia", xlab="Position", ylab="Quantity",
+        legend.text=c("Female","Male"), cex.names=0.8)
+
+################### MAP PROJECTIONS#####################
+
+library(ggplot2)
+library(ggmap)
+library(mapproj)
+
+###############################################
+
+par(mfrow=c(2,1))
+mapE<- get_map(location = 'Europe', zoom = 4)
+ggmap(mapE)
+
+#####
+
+mapData<-dat[,c(1,5,6)]
+uniqueVals<-unique(mapData)
+n<-dim(uniqueVals)[1]
+count<-rep(1,n)
+
+for (i in 1:n ) {
+  dataTmp<-mapData[uniqueVals[i,1]==mapData[,1],]
+  count[i]<-dim(dataTmp)[1]
+}
+
+x1<-uniqueVals$long..; y1<-uniqueVals[,2]; z1<-count;
+Dtmp<-data.frame(x1,y1,z1)
+mapPoints <- ggmap(mapE) + 
+  geom_point(aes(x = x1, y = y1, size = z1), data = Dtmp, alpha = .8)
+
+mapPointsLegend <- mapPoints +
+  scale_size_area(breaks = c(1,5,10,15,20,25,30,35), 
+                  labels = c('1','5','10','15','20','25','30','35'), name = "Number of Faculty")
+mapPointsLegend
+
+
+##############################################################################################################
+
+mapNa<- get_map(location = 'North America', zoom = 3)
+ggmap(mapNa)
+
+mapData<-dat[,c(1,5,6)]
+uniqueVals<-unique(mapData)
+n<-dim(uniqueVals)[1]
+count<-rep(1,n)
+
+for (i in 1:n ) {
+  dataTmp<-mapData[uniqueVals[i,1]==mapData[,1],]
+  count[i]<-dim(dataTmp)[1]
+}
+
+x1<-uniqueVals$long..; y1<-uniqueVals[,2]; z1<-count;
+Dtmp<-data.frame(x1,y1,z1)
+mapPoints <- ggmap(mapNa) +
+  geom_point(aes(x = x1, y = y1, size = z1), data = Dtmp, alpha = .8)
+
+
+mapPointsLegend <- mapPoints +
+  scale_size_area(breaks = c(1,5,10,15,20,25,30,35), 
+                  labels = c('1','5','10','15','20','25','30','35'), name = "Number of Faculty")
+mapPointsLegend
+
+############################################################
+
+mapA <- get_map(location = "Africa", zoom = 3)
+ggmap(mapA)
+
+mapData<-dat[,c(1,5,6)]
+uniqueVals<-unique(mapData)
+n<-dim(uniqueVals)[1]
+count<-rep(1,n)
+
+for (i in 1:n ) {
+  dataTmp<-mapData[uniqueVals[i,1]==mapData[,1],]
+  count[i]<-dim(dataTmp)[1]
+}
+
+x1<-uniqueVals$long..; y1<-uniqueVals[,2]; z1<-count;
+Dtmp<-data.frame(x1,y1,z1)
+mapPoints <- ggmap(mapA) +
+  geom_point(aes(x = x1, y = y1, size = z1), data = Dtmp, alpha = .8)
+
+
+mapPointsLegend <- mapPoints +
+  scale_size_area(breaks = c(1,5,10,15,20,25,30,35), 
+                  labels = c('1','5','10','15','20','25','30','35'), name = "Number of Faculty")
+mapPointsLegend
+
+#####################################################
+
+mapSA <- get_map(location = 'Paraguay', zoom = 3)
+ggmap(mapSA)
+
+mapData<-dat[,c(1,5,6)]
+uniqueVals<-unique(mapData)
+n<-dim(uniqueVals)[1]
+count<-rep(1,n)
+
+for (i in 1:n ) {
+  dataTmp<-mapData[uniqueVals[i,1]==mapData[,1],]
+  count[i]<-dim(dataTmp)[1]
+}
+
+
+x1<-uniqueVals$long..; y1<-uniqueVals[,2]; z1<-count;
+Dtmp<-data.frame(x1,y1,z1)
+mapPoints <- ggmap(mapSA) +
+  geom_point(aes(x = x1, y = y1, size = z1), data = Dtmp, alpha = .8)
+
+
+mapPointsLegend <- mapPoints +
+  scale_size_area(breaks = c(1,5,10,15,20,25,30,35), 
+                  labels = c('1','5','10','15','20','25','30','35'), name = "Number of Faculty")
+mapPointsLegend
+
+#################################################################
+
+mapAS <- get_map(location = "Asia", zoom = 3)
+ggmap(mapAS)
+
+mapData<-dat[,c(1,5,6)]
+uniqueVals<-unique(mapData)
+n<-dim(uniqueVals)[1]
+count<-rep(1,n)
+
+for (i in 1:n ) {
+  dataTmp<-mapData[uniqueVals[i,1]==mapData[,1],]
+  count[i]<-dim(dataTmp)[1]
+}
+
+
+x1<-uniqueVals$long..; y1<-uniqueVals[,2]; z1<-count;
+Dtmp<-data.frame(x1,y1,z1)
+mapPoints <- ggmap(mapAS) +
+  geom_point(aes(x = x1, y = y1, size = z1), data = Dtmp, alpha = .8)
+
+
+mapPointsLegend <- mapPoints +
+  scale_size_area(breaks = c(1,5,10,15,20,25,30,35), 
+                  labels = c('1','5','10','15','20','25','30','35'), name = "Number of Faculty")
+mapPointsLegend
+
+#################################################################
+
+mapJP <- get_map(location = "Japan", zoom = 4)
+ggmap(mapJP)
+
+mapData<-dat[,c(1,5,6)]
+uniqueVals<-unique(mapData)
+n<-dim(uniqueVals)[1]
+count<-rep(1,n)
+
+for (i in 1:n ) {
+  dataTmp<-mapData[uniqueVals[i,1]==mapData[,1],]
+  count[i]<-dim(dataTmp)[1]
+}
+
+
+x1<-uniqueVals$long..; y1<-uniqueVals$lat..N.; z1<-count;
+Dtmp<-data.frame(x1,y1,z1)
+mapPoints <- ggmap(mapJP) +
+  geom_point(aes(x = x1, y = y1, size = z1), data = Dtmp, alpha = .6)
+
+
+mapPointsLegend <- mapPoints +
+  scale_size_area(breaks = c(1,5,10,15,20,25,30,35), 
+                  labels = c('1','5','10','15','20','25','30','35'), name = "Number of Faculty")
+mapPointsLegend
+#####################################################
+
+mapAU <- get_map(location = "Australia", zoom = 4)
+ggmap(mapAU)
+
+x1<-uniqueVals$long..; y1<-uniqueVals$lat..N.; z1<-count;
+Dtmp<-data.frame(x1,y1,z1)
+mapPoints <- ggmap(mapAU) +
+  geom_point(aes(x = x1, y = y1, size = z1), data = Dtmp, alpha = .8)
+
+mapPointsLegend <- mapPoints +
+  scale_size_area(breaks = c(1,5,10,15,20,25,30,35), 
+                  labels = c('1','5','10','15','20','25','30','35'), name = "Number of Faculty")
+mapPointsLegend
+
+###########################################################
+
+mapME <- get_map(location = "Middle East", zoom = 4)
+ggmap(mapME)
+
+x1<-uniqueVals$long..; y1<-uniqueVals$lat..N.; z1<-count;
+Dtmp<-data.frame(x1,y1,z1)
+mapPoints <- ggmap(mapME) +
+  geom_point(aes(x = x1, y = y1, size = z1), data = Dtmp, alpha = .6)
+
+mapPointsLegend <- mapPoints +
+  scale_size_area(breaks = c(1,5,10,15,20,25,30,35), 
+                  labels = c('1','5','10','15','20','25','30','35'), name = "Number of Faculty")
+mapPointsLegend
+
+#####
+
+mapIR <- get_map(location = "Iran",zoom = 5)
+ggmap(mapIR)
+
+x1<-uniqueVals$long..; y1<-uniqueVals$lat..N.; z1<-count;
+Dtmp<-data.frame(x1,y1,z1)
+mapPoints <- ggmap(mapIR) +
+  geom_point(aes(x = x1, y = y1, size = z1), data = Dtmp, alpha = .6)
+
+mapPointsLegend <- mapPoints +
+  scale_size_area(breaks = c(1,5,10,15,20,25,30,35), 
+                  labels = c('1','5','10','15','20','25','30','35'), name = "Number of Faculty")
+mapPointsLegend
+
+################################################################
